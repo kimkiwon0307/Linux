@@ -467,7 +467,44 @@ UUID=a1b2c3d4-e5f6...  /data            ext4               defaults  0       2
 ---
    
 
-      
+#### 6.3.1 LVM의 개념
+* **LVM이란?** `Logical Volume Manager`(논리 볼륨 관리자)의 약자로, 물리적인 하드디스크 구조에 종속되지 않고 여러 디스크를 하나의 큰 저장 공간으로 묶은 뒤 **사용자가 원하는 대로 용량을 자유롭게 늘리고 줄일 수 있게 해주는 유연한 디스크 관리 기술**입니다.
+
+##### 🔹 LVM의 핵심 3단계 아키텍처
+  [ 물리 디스크 ]      /dev/sdb                  /dev/sdc
+                           │                         │
+                           ▼                         ▼
+  [ 1. PV 단계 ]     Physical Volume           Physical Volume  (pvcreate)
+                           │                         │
+                           └───────────┬─────────────┘
+                                       ▼
+  [ 2. VG 단계 ]                 Volume Group (가상 대형 풀)     (vgcreate)
+                                       │
+                               ┌───────┴───────┐
+                               ▼               ▼
+  [ 3. LV 단계 ]         Logical Volume  Logical Volume         (lvcreate)
+                               │               │
+                        (파일시스템 포맷 후 마운트하여 실사용)
+
+##### 🔹 실무에서 LVM을 반드시 쓰는 이유 (핵심 기능)
+* **🚀 중단 없는 온라인 용량 확장:** 서버 운영 중 디스크 용량이 부족해지면, 새 디스크를 장착한 뒤 VG에 병합하고 LV를 키워주면 됩니다. 이 모든 과정이 **서비스를 중단(Umount)하지 않고 실시간으로 가능**합니다.
+* **⚖️ 일반 파티션 vs LVM:** * *일반 파티션:* 구조가 단순하지만 한 번 정한 용량을 늘리거나 줄이기가 매우 까다롭고 위험합니다.
+  * *LVM:* 초기 구성은 레이어가 추가되어 비교적 복잡해 보이지만, 추후 유지보수 및 자원 확장이 압도적으로 편리합니다.
+* **📸 백업을 위한 스냅샷(Snapshot):** 특정 시점의 디스크 상태를 그대로 얼려 보관하는 스냅샷 기능을 지원하여, 데이터 복구나 안정적인 실시간 백업 환경을 구축할 수 있습니다.
+
+#### 6.3.2 LVM 구현 및 실습 절차
+
+| 단계 | 수행 작업 | 실행 명령어 | 상태 확인 명령어 |
+| :--- | :--- | :--- | :--- |
+| **1단계** | **물리 디스크 확인** | - | `lsblk` |
+| **2단계** | **PV(물리 볼륨) 생성** | `sudo pvcreate /dev/sdb` | `sudo pvs` 또는 `pvdisplay` |
+| **3단계** | **VG(볼륨 그룹) 생성** | `sudo vgcreate vgdata /dev/sdb /dev/sdc` | `sudo vgs` 또는 `vgdisplay` |
+| **4단계** | **LV(논리 볼륨) 생성** | `sudo lvcreate -L 1G -n lvdata vgdata` <br>*(옵션: `-L` 용량, `-n` 이름)* | `sudo lvs` 또는 `lvdisplay` |
+| **5단계** | **파일 시스템 포맷** | `sudo mkfs.ext4 /dev/vgdata/lvdata` | - |
+| **6단계** | **디렉터리 마운트** | `sudo mkdir /data`<br>`sudo mount /dev/vgdata/lvdata /data` | `df -h` |
+| **7단계** | **fstab 영구 등록** | `sudo vim /etc/fstab` | `sudo mount -a` *(테스트)* |
+
+---
             
                   
                   
