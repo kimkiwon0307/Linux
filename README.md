@@ -1,6 +1,7 @@
 # 우분투 리눅스
 
-## 1장. 실습 환경 구축
+<details>
+<summary><h2>1장. 실습 환경 구축</h2></summary>
 
 > **개요:** 리눅스 실습의 기반이 되는 가상화 개념을 이해하고, VMware Workstation을 활용한 가상머신 환경 구축 및 특징을 학습합니다.
 
@@ -74,6 +75,7 @@
 2. Shared Folder (VMware 공유 폴더 설정)
 3. **SCP** (Secure Copy Protocol) 🌟 *실무 다빈도*
 4. **WinSCP** (GUI 기반의 FTP/SFTP 클라이언트 프로그램) 🌟 *실무 다빈도*
+</details>
       
 # 2장 우분투 리눅스 소개
 
