@@ -473,27 +473,29 @@ UUID=a1b2c3d4-e5f6...  /data            ext4               defaults  0       2
 
 ### 💡 실무 스크립트 예제
 
-```bash
-#!/bin/bash
-
-# 변수와 입력
-read -p "이름을 입력하세요: " NAME
-echo "안녕하세요, $NAME님!"
-
-# 조건문
-if [ $# -eq 0 ]; then
-    echo "전달된 매개변수가 없습니다."
-else
-    echo "전달된 매개변수 개수: $#"
-fi
-
-# 반복문
-for i in {1..3}
-do
-    echo "반복 중... $i"
-done
-```
+      ```bash
+            #!/bin/bash
+            
+            # 변수와 입력
+            read -p "이름을 입력하세요: " NAME
+            echo "안녕하세요, $NAME님!"
+            
+            # 조건문
+            if [ $# -eq 0 ]; then
+                echo "전달된 매개변수가 없습니다."
+            else
+                echo "전달된 매개변수 개수: $#"
+            fi
+            
+            # 반복문
+            for i in {1..3}
+            do
+                echo "반복 중... $i"
+            done
+      ```
 </details>
+
+
 <details>
 <summary><h2>7장. 원격지 시스템 관리</h2></summary>
 
