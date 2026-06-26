@@ -493,7 +493,7 @@ do
     echo "반복 중... $i"
 done
 ```
-
+</details>
 <details>
 <summary><h2>7장. 원격지 시스템 관리</h2></summary>
 
