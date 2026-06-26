@@ -349,7 +349,7 @@ UUID=a1b2c3d4-e5f6...  /data            ext4               defaults  0       2
   ```
 </details>
 
----
+
                   
 <details>
 <summary><h2>5장. 하드디스크 관리와 사용자별 공간 할당</h2></summary>
@@ -416,7 +416,7 @@ UUID=a1b2c3d4-e5f6...  /data            ext4               defaults  0       2
 | **3단계** | **기능 활성화** | `sudo quotaon /data` |
 | **4단계** | **용량 설정** | `sudo edquota -u [사용자명]` |
 </details>
----
+
       
 <details>
 <summary><h2>6장. 셸 스크립트 프로그래밍</h2></summary>
