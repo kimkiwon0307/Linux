@@ -873,7 +873,43 @@ UUID=a1b2c3d4-e5f6...  /data            ext4               defaults  0       2
 * 설치된 패키지 목록 : `apt list --installed`
 * 특정 패키지 찾으려면 : `apt list --installed | grep nginx`
 * 설치 가능한 버전 확인 : `apt policy nginx`
-            
+
+## 3.7 서비스 관리하기
+systemd는 서비스 시작, 중지, 재시작, 상태 확인, 부팅 시 자동 시작 설정, 로그 확인 관리를 담당한다.
+
+### 3.7.1 시스템 관리자 systemd
+* **systemd란?** 리눅스 시스템과 서비스를 관리하는 시스템 관리자(초기화 시스템)이다. (리눅스 서버의 서비스 관리자라고 생각하면 된다.)
+* **systemd는 언제 실행될까?** 커널이 실행된 이후 systemd가 시스템을 관리하기 시작한다.
+* systemd가 하는 일 : 시스템 부팅 관리(서버가 부팅될 때 필요한 서비스를 실행한다), 서비스 관리(서비스를 시작하거나 중지), 서비스 상태 확인, 부팅 시 자동 실행 설정, 로그 관리
+* systemd와 systemctl의 관계 : `systemd`(실제로 시스템을 관리하는 프로그램), `systemctl`(관리자가 systemd를 조작하기 위해 사용하는 명령어)
+
+### 3.7.2 systemctl로 시스템 상태 조회하기
+* 서비스 상태 확인 : `systemctl status 서비스이름` (`Loaded`: 서비스가 systemd에 등록되어 있는지 확인, `Active`: 서비스가 현재 실행 중인지 보여준다)
+* 시스템 전체 상태 확인 : `systemctl status` 또는 systemd 자체의 상태 확인 (`systemctl is-system-running`)
+* 실패한 서비스 확인 : `systemctl --failed`
+* 장애 상황 예시 : 시스템 이상 발견 $\rightarrow$ `systemctl --failed` $\rightarrow$ 문제 서비스 확인 $\rightarrow$ `systemctl status 서비스 이름` $\rightarrow$ `journalctl -u 서비스 이름`
+
+### 3.7.3 systemctl로 서비스 제어하기
+* 서비스 시작 : `sudo systemctl start apache2`
+* 서비스 중지 : `sudo systemctl stop apache2`
+* 서비스 재시작 : `sudo systemctl restart apache2`
+* 설정 다시 읽기 : `sudo systemctl reload apache2`
+* `restart`와 `reload` 차이 : `restart`는 서비스를 다시 시작하고, `reload`는 설정만 다시 읽음
+* 서비스 활성화 여부 확인 : `systemctl is-active apache2`
+* 부팅 시 자동 시작 설정 : `sudo systemctl enable apache2`
+* 자동 시작 해제 : `sudo systemctl disable apache2`
+
+### 3.7.4 journalctl로 systemd 로그 정보 조회하기
+* **journalctl이란?** systemd의 로그를 확인하는 명령어이다.
+* 전체 로그 보기 : `journalctl` (시스템의 journal 로그를 확인합니다.)
+* 특정 서비스 로그 확인 : `journalctl -u ssh`
+* 최근 로그 확인 : `journalctl -n 50`
+* 실시간 로그 보기 : `journalctl -f`, `journalctl -u apache2 -f` (특정 서비스 실시간 로그)
+* 오늘 발생한 로그 확인 : `journalctl --since today`
+* 특정 시간 로그 확인 : `journalctl --since "2026-09-10 09:00:00"`
+* 특정 시간 이후 로그 : `journalctl --since "1 hour ago"`
+* 실제 서버 운영 흐름 : 고객 문의 발생 $\rightarrow$ 서버 접속 $\rightarrow$ `systemctl status apache2` $\rightarrow$ `systemctl --failed` $\rightarrow$ `journalctl -u apache2` $\rightarrow$ `journalctl -u apache2 --since today` $\rightarrow$ `journalctl -u apache2 -f`
+      
 
 </details>
 
