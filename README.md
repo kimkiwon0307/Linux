@@ -1176,9 +1176,56 @@ systemd는 서비스 시작, 중지, 재시작, 상태 확인, 부팅 시 자동
                   
                   
   </details>               
-                  
-                  
-                        
+
+<details>
+  <summary><b>6장 네트워크 관리 실습</b></summary>
+  
+  <h3>6.1 네트워크 관리하기</h3>
+  <ul>
+    <li><b>lo (Loopback)</b>: 자기 자신을 가리키는 가상 네트워크 인터페이스 (<code>127.0.0.1</code>)</li>
+    <li><b>IP 주소 확인</b>: <code>ip addr</code> 또는 <code>ip a</code></li>
+    <li><b>ip a 확인 포인트</b>: 인터페이스 존재 여부, UP 상태 여부, IP 할당 여부, 예상한 IP 여부</li>
+    <li><b>인터페이스 상태 확인</b>: <code>ip link</code> (UP인 경우 활성화 상태)</li>
+    <li><b>인터페이스 켜기/끄기</b>: 
+      <ul>
+        <li>켜기: <code>sudo ip link set ens33 up</code></li>
+        <li>끄기: <code>sudo ip link set ens33 down</code></li>
+      </ul>
+    </li>
+    <li><b>라우팅 테이블 확인</b>: <code>ip route</code></li>
+    <li><b>인터넷 불가 시 점검 순서</b>: 인터페이스 ➔ IP ➔ 라우팅(Routing) ➔ 게이트웨이(Gateway) ➔ DNS</li>
+    <li><b>Ping 테스트</b>: 가장 기본적인 네트워크 확인 명령어 (<code>ping 8.8.8.8</code> 및 <code>ping google.com</code> 둘 다 확인 필요)</li>
+    <li><b>DNS 확인</b>: <code>cat /etc/resolv.conf</code></li>
+    <li><b>네트워크 연결 상태 확인</b>: <code>ip</code>, <code>ss</code>, <code>ip addr</code>, <code>ip route</code>, <code>ss -tuln</code></li>
+    <li><b>ss -tuln</b>: 서버 운영에서 매우 중요한 명령어</li>
+    <li><b>ss 옵션</b>: <code>-t</code>(TCP), <code>-u</code>(UDP), <code>-l</code>(LISTEN), <code>-n</code>(숫자로 표시) ➔ TCP/UDP의 LISTEN 상태 포트를 숫자로 확인</li>
+    <li><b>네트워크 설정 파일 위치</b>: <code>/etc/netplan/</code> 아래에 위치 (예: <code>ls -l /etc/netplan/50-cloud-init.yaml</code>)</li>
+    <li><b>Netplan</b>: 리눅스 네트워크 설정을 선언적으로 작성하는 도구</li>
+    <li><b>DHCP</b>: 서버가 자동으로 네트워크 정보를 받는 방식</li>
+    <li><b>정적 IP</b>: 서버에서 고정 IP가 필요할 때 Netplan을 통해 설정 가능</li>
+  </ul>
+
+  <h3>6.2 가상 시스템에서 네트워크 관리하기</h3>
+  <ul>
+    <li><b>VMware 네트워크 대표 방식</b>: NAT, Bridged, Host-only</li>
+    <li><b>NAT</b>: 일반적인 실습 환경에서 편리하게 사용</li>
+    <li><b>Bridged</b>: 가상 머신(VM)을 물리 네트워크에 직접 연결한 것처럼 동작하게 함</li>
+    <li><b>Host-only</b>: 호스트(Host)와 VM 사이에서만 통신하도록 만든 네트워크</li>
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+</details>
 
 
 
