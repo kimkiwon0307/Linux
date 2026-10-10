@@ -58,16 +58,73 @@
 9. `ps aux | grep nginx`에서 `|`는 무슨 역할인가요?
 10. 현재 위치가 /home/ubuntu일 때 상위 디렉터리로 이동하려면?
 
+## 실습 문제
+1. 홈 디렉터리로 이동한다.
+2. linux-day1이라는 디렉터리를 만든다.
+3. linux-day1 안에
+   app.log
+   config.conf
+   test.txt
+   세 파일을 만든다.
+4. app.log 안에 아래 내용을 넣는다.
+INFO server started
+INFO user login
+ERROR database connection failed
+WARN memory usage high
+ERROR timeout occurred
+5. app.log에서 ERROR가 포함된 줄만 출력한다.
+6. linux-day1 안에서 이름에 conf가 포함된 파일을 find로 찾는다.
+7. app.log의 마지막 2줄만 출력한다.
+8. ERROR가 포함된 결과를 error.log 파일에 저장한다.
+9. error.log에
+   ERROR disk full
+   이라는 내용을 기존 내용을 지우지 않고 추가한다.
+10. 최종적으로 linux-day1 안의 파일 목록을 자세히 확인한다.
 
+## 정답
+cd ~
 
+mkdir linux-day1
 
+touch ./linux-day1/app.log ./linux-day1/config.conf ./linux-day1/test.txt
 
+cat > ./linux-day1/app.log << 'EOF'
+INFO server started
+INFO user login
+ERROR database connection failed
+WARN memory usage high
+ERROR timeout occurred
+EOF
 
+grep "ERROR" ./linux-day1/app.log
 
+find ./linux-day1 -name "*conf*"
 
+tail -n 2 ./linux-day1/app.log
 
+grep "ERROR" ./linux-day1/app.log > ./linux-day1/error.log
 
+echo "ERROR disk full" >> ./linux-day1/error.log
 
+ls -al ./linux-day1/
+
+## 실습 2 파일 검색 + 로그 확인
+1. linux-day1 디렉터리 안에서 .log로 끝나는 파일을 모두 찾으세요. find ./linux-day1 -name "*.log"
+2. app.log에서 ERROR 또는 WARN이 포함된 줄만 찾으세요. grep -E "ERROR|WARN" ./linux-day1/app.log
+3. app.log의 마지막 3줄만 확인하세요. tail -n 3 ./linux-day1/app.log
+4. app.log에서 ERROR가 몇 줄인지 세어보세요. grep -c "ERROR" ./linux-day1/app.log
+5. error.log 파일의 내용을 화면으로 확인하세요. cat ./linux-day1/error.log
+6. config.conf를 config.conf.bak이라는 이름으로 복사하세요. cp ./linux-day1/config.conf ./linux-day1/config.conf.bak
+7. test.txt를 /tmp로 이동하세요. mv ./linux-day1/test.txt /tmp
+8. 현재 linux-day1 디렉터리의 파일 목록을 자세히 확인하세요. ls -al ./linux-day1/
+
+## 장애 문제
+
+1. 운영 서버에서 장애 발생, 로그 파일은 /var/log/myapp/app.log, 담당자는 방금 발생한 ERROR를 빨리 확인해 주세요. 어떤 명령어를 사용하겠습니까?
+2. /var/log 아래에 로그 파일이 너무 많아서 access.log라는 파일이 어디 있는지 모르겠습니다. 어떤 명령어로 찾겠습니까?
+
+1) tail -n 50 /var/log/myapp/app.log | grep -i "error" 또는 tail -f /var/log/myapp/app.log | grep -i "error"
+2) sudo find /var/log -name "access.log"
 
 
 
