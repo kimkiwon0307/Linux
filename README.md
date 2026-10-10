@@ -1,4 +1,8 @@
 # 리눅스
+<details>
+<summary><h2>1. 기본 사용과 파일 관리</h2></summary>
+   
+
 
 ## 리눅스 디렉터리 구조
 
@@ -126,7 +130,7 @@ ls -al ./linux-day1/
 1) tail -n 50 /var/log/myapp/app.log | grep -i "error" 또는 tail -f /var/log/myapp/app.log | grep -i "error"
 2) sudo find /var/log -name "access.log"
 
-
+</details>
 
 
 
