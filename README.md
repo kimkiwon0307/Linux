@@ -357,6 +357,71 @@ ERROR disk full
   * **SGID:** 공유 디렉터리에서 새 파일이 부모 디렉터리의 그룹을 이어받게 할 때 활용 가능한 특수 권한
   * **Sticky Bit:** 공유 디렉터리에서 다른 사용자의 파일을 함부로 삭제하지 못하도록 하는 권한 (예: `/tmp`)
   * **ACL:** 기본 Owner / Group / Other 권한만으로 부족할 때 특정 사용자나 특정 그룹에 추가로 세밀한 권한을 부여하는 기능
+
+## 실습 문제
+
+[리눅스 2장 기본 실습문제 8문제 + 정답]
+
+1. user1이라는 사용자를 생성하시오.
+
+정답:
+sudo useradd user1
+
+
+2. developers라는 그룹을 생성하시오.
+
+정답:
+sudo groupadd developers
+
+
+3. user1 사용자를 developers 그룹에 추가하되,
+기존에 속해 있던 그룹은 유지하시오.
+
+정답:
+sudo usermod -aG developers user1
+
+
+4. user1 사용자가 어떤 그룹에 속해 있는지 확인하시오.
+
+정답:
+id user1
+
+또는:
+groups user1
+
+
+5. /tmp/project 디렉터리를 생성하고
+소유자를 user1, 소유 그룹을 developers로 변경하시오.
+
+정답:
+sudo mkdir /tmp/project
+sudo chown user1:developers /tmp/project
+
+
+6. /tmp/project 디렉터리의 권한을 다음과 같이 설정하시오.
+
+Owner : rwx
+Group : r-x
+Other : ---
+
+정답:
+sudo chmod 750 /tmp/project
+
+
+7. tomcat이라는 서비스 전용 계정을 생성하시오.
+이 계정은 일반 로그인은 할 수 없도록 설정하시오.
+
+정답:
+sudo useradd -r -s /usr/sbin/nologin tomcat
+
+확인:
+getent passwd tomcat
+
+8. 현재 사용자의 umask 값을 확인하시오.
+정답:
+umask
+
+
 </details>
 
 
