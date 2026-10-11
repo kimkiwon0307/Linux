@@ -5,113 +5,131 @@
 
 
 ## 리눅스 디렉터리 구조
-
-/etc : 시스템/서비스 설정 파일
-/var : 계속 변하는 데이터 로그, 캐시 등
-/home : 일반 사용자 홈 디렉터리
-/tmp : 임시 파일
-/opt : 별도로 설치하는 프로그램을 두기도 함
-/dev : 디스크, 터미널 같은 장치를 파일 형태로 표현
-/proc : 프로세스와 커널 정보를 보여주는 가상 파일 시스템
+1. /etc : 시스템/서비스 설정 파일
+2. /var : 계속 변하는 데이터 로그, 캐시 등
+3. /home : 일반 사용자 홈 디렉터리
+4. /tmp : 임시 파일
+5. /opt : 별도로 설치하는 프로그램을 두기도 함
+6. /dev : 디스크, 터미널 같은 장치를 파일 형태로 표현
+7. /proc : 프로세스와 커널 정보를 보여주는 가상 파일 시스템
 
 ## 절대경로와 상대경로
-/ : 절대 경로
-상대 경로 : 현재 위치를 기준으로
-.. : 상위 디렉터리
-. : 현재 디렉터리
-~ : 사용자의 홈 디렉터리
+1. / : 절대 경로
+2. 상대 경로 : 현재 위치를 기준으로
+3. .. : 상위 디렉터리
+4. . : 현재 디렉터리
+5. ~ : 사용자의 홈 디렉터리
 
 ## 파일과 디렉터리 기본 명령
-현재 위치가 어디지? : pwd
-여기 뭐가 있지? : ls
-숨김 파일까지? : ls -la
-디렉터리 이동 : cd
-디렉터리 생성 : mkdir
-빈 파일 생성 : touch
-복사 : cp
-이동/이름 변경 : mv
-삭제 : rm
+1. 현재 위치가 어디지? : pwd
+2. 여기 뭐가 있지? : ls
+3. 숨김 파일까지? : ls -la
+4. 디렉터리 이동 : cd
+5. 디렉터리 생성 : mkdir
+6. 빈 파일 생성 : touch
+7. 복사 : cp
+8. 이동/이름 변경 : mv
+9. 삭제 : rm
 
 ## 파일 내용 확인
-전체 내용 간단히 확인 : cat
-긴 파일 페이지 단위 확인 : less
-앞 부분 확인 : head
-마지막 부분 확인 : tail
-실시간 로그 확인: tail -f
+1. 전체 내용 간단히 확인 : cat
+2. 긴 파일 페이지 단위 확인 : less
+3. 앞 부분 확인 : head
+4. 마지막 부분 확인 : tail
+5. 실시간 로그 확인: tail -f
 
 ## 파일 찾기와 내용 검색
-파일 자체를 찾음 : find
-파일 안의 문자열을 찾음 : grep
+1. 파일 자체를 찾음 : find
+2. 파일 안의 문자열을 찾음 : grep
 
 ## 파이프 | 
-앞 명령어의 결과를 뒤 명령어의 입력으로 전달
+1. 앞 명령어의 결과를 뒤 명령어의 입력으로 전달
 
 ## > 와 >>
-덮어 쓰기 : >
-뒤에 추가 : >>
+1. 덮어 쓰기 : >
+2. 뒤에 추가 : >>
 
-## 문제
-1. Linux에서 시스템이나 서비스 설정 파일이 주로 저장되는 디렉터리는?
-2. 시스템 로그가 주로 저장되는 디렉터리는?
-3. 현재 작업 중인 경로를 확인하는 명령어는?
-4. 숨김 파일까지 포함해서 파일 목록을 자세히 확인하려면?
-5. /var/log 안에서 이름에 nginx가 들어간 파일을 찾으려면 어떤 명령어를 사용하나요?
-6. app.log에서 ERROR라는 문자열이 들어간 줄만 확인하려면?
-7. app.log의 마지막 부분을 실시간으로 계속 보고 싶다면?
-8. `>`와 `>>`의 차이는?
-9. `ps aux | grep nginx`에서 `|`는 무슨 역할인가요?
-10. 현재 위치가 /home/ubuntu일 때 상위 디렉터리로 이동하려면?
+## 확인 문제
+📋 리눅스 1장 확인문제 정리
+
+1. Linux에서 시스템이나 서비스 설정 파일이 주로 저장되는 디렉터리는 어디인가?
+* **정답:** `/etc`
+
+---
+
+2. 시스템 로그가 주로 저장되는 디렉터리는 어디인가?
+* **정답:** `/var/log`
+
+---
+
+3. 현재 작업 중인 경로를 확인하는 명령어는 무엇인가?
+* **정답:** `pwd`
+
+---
+
+4. 숨김 파일까지 포함해서 현재 디렉터리의 파일 목록을 자세히 확인하는 명령어는 무엇인가?
+* **정답:** `ls -al`
+
+---
+
+5. /var/log 디렉터리 아래에서 이름에 nginx가 포함된 파일을 찾는 명령어는 무엇인가?
+* **정답:** `find /var/log -name "*nginx*"`
+
+---
+
+6. app.log 파일에서 ERROR라는 문자열이 포함된 줄만 확인하는 명령어는 무엇인가?
+* **정답:** `grep "ERROR" app.log`
+
+---
+
+7. app.log 파일의 마지막 부분을 실시간으로 계속 확인하는 명령어는 무엇인가?
+* **정답:** `tail -f app.log`
+
+---
+
+8. > 와 >> 의 차이는 무엇인가?
+* **정답:**
+  * `>` : 파일 내용을 새로 저장하거나 기존 내용을 덮어씁니다.
+  * `>>` : 기존 내용을 유지하면서 파일 뒤에 내용을 추가합니다.
+
+---
+
+9. ps aux | grep nginx 명령에서 | 의 역할은 무엇인가?
+* **정답:** 앞 명령어의 출력 결과를 뒤 명령어의 입력으로 전달합니다. (예: `ps aux`의 결과를 `grep nginx`로 넘겨서 nginx가 포함된 줄만 확인)
+
+---
+
+10. 현재 위치가 /home/ubuntu일 때 상위 디렉터리로 이동하는 명령어는 무엇인가?
+* **정답:** `cd ..`
 
 ## 실습 1
-1. 홈 디렉터리로 이동한다.
-2. linux-day1이라는 디렉터리를 만든다.
-3. linux-day1 안에
-   app.log
-   config.conf
-   test.txt
-   세 파일을 만든다.
-4. app.log 안에 아래 내용을 넣는다.
+1. 홈 디렉터리로 이동한 뒤 linux-day1 디렉터리를 생성하시오.
+
+2. linux-day1 디렉터리 안에 app.log, config.conf, test.txt 파일을 생성하시오.
+
+3. app.log 파일에 아래 내용을 저장하시오.
+
 INFO server started
 INFO user login
 ERROR database connection failed
 WARN memory usage high
 ERROR timeout occurred
-5. app.log에서 ERROR가 포함된 줄만 출력한다.
-6. linux-day1 안에서 이름에 conf가 포함된 파일을 find로 찾는다.
-7. app.log의 마지막 2줄만 출력한다.
-8. ERROR가 포함된 결과를 error.log 파일에 저장한다.
-9. error.log에
-   ERROR disk full
-   이라는 내용을 기존 내용을 지우지 않고 추가한다.
-10. 최종적으로 linux-day1 안의 파일 목록을 자세히 확인한다.
 
-## 정답
-cd ~
+4. app.log에서 ERROR가 포함된 줄만 출력하시오.
 
-mkdir linux-day1
+5. linux-day1 디렉터리 안에서 이름에 conf가 포함된 파일을 찾으시오.
 
-touch ./linux-day1/app.log ./linux-day1/config.conf ./linux-day1/test.txt
+6. app.log의 마지막 2줄만 출력하시오.
 
-cat > ./linux-day1/app.log << 'EOF'
-INFO server started
-INFO user login
-ERROR database connection failed
-WARN memory usage high
-ERROR timeout occurred
-EOF
+7. app.log에서 ERROR가 포함된 줄만 골라 error.log 파일에 저장하시오.
 
-grep "ERROR" ./linux-day1/app.log
+8. error.log의 기존 내용을 유지하면서 아래 내용을 추가하시오.
 
-find ./linux-day1 -name "*conf*"
+ERROR disk full
 
-tail -n 2 ./linux-day1/app.log
+9. config.conf 파일을 config.conf.bak이라는 이름으로 복사하시오.
 
-grep "ERROR" ./linux-day1/app.log > ./linux-day1/error.log
-
-echo "ERROR disk full" >> ./linux-day1/error.log
-
-ls -al ./linux-day1/
-
+10. linux-day1 디렉터리의 파일 목록을 숨김 파일까지 포함해서 자세히 확인하시오.
 ## 실습 2 파일 검색 + 로그 확인
 1. linux-day1 디렉터리 안에서 .log로 끝나는 파일을 모두 찾으세요. find ./linux-day1 -name "*.log"
 2. app.log에서 ERROR 또는 WARN이 포함된 줄만 찾으세요. grep -E "ERROR|WARN" ./linux-day1/app.log
