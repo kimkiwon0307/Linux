@@ -421,7 +421,287 @@ getent passwd tomcat
 정답:
 umask
 
+## 실무형 권한 문제
+[리눅스 2장 실무형 권한 실습 5문제 + 정답]
 
+
+1. /data/share 디렉터리를 생성하고,
+소유자는 user1,
+소유 그룹은 developers로 설정하시오.
+
+권한:
+Owner = rwx
+Group = rwx
+Other = ---
+
+정답:
+
+sudo mkdir -p /data/share
+sudo chown user1:developers /data/share
+sudo chmod 770 /data/share
+
+확인:
+ls -ld /data/share
+
+설명:
+770
+Owner = rwx = 7
+Group = rwx = 7
+Other = --- = 0
+
+
+2. user2 사용자를 생성하고 developers 그룹에 추가하시오.
+그 후 user2가 /data/share에 접근 가능한지 확인하시오.
+
+정답:
+
+sudo useradd user2
+sudo usermod -aG developers user2
+
+그룹 확인:
+id user2
+
+접근 확인:
+sudo -u user2 ls /data/share
+
+또는:
+sudo -u user2 test -x /data/share && echo "접근 가능"
+
+설명:
+user2가 developers 그룹에 속해 있고,
+/data/share의 그룹이 developers이며
+그룹에 rwx 권한이 있으므로 접근할 수 있다.
+
+
+3. /data/app 디렉터리를 생성하고
+소유자와 소유 그룹을 tomcat으로 설정하시오.
+
+tomcat만 모든 권한을 가지며
+다른 사용자는 접근할 수 없도록 설정하시오.
+
+정답:
+
+sudo mkdir -p /data/app
+sudo chown tomcat:tomcat /data/app
+sudo chmod 700 /data/app
+
+확인:
+ls -ld /data/app
+
+설명:
+700
+Owner = rwx
+Group = ---
+Other = ---
+
+따라서 tomcat만 접근할 수 있다.
+
+
+4. /data/shared를 developers 그룹이 공동으로 사용한다.
+
+그 안에서 새 파일을 만들었을 때
+부모 디렉터리의 developers 그룹을 상속하도록 설정하시오.
+
+정답:
+
+sudo mkdir -p /data/shared
+sudo chown root:developers /data/shared
+sudo chmod 2770 /data/shared
+
+확인:
+ls -ld /data/shared
+
+설명:
+앞의 2가 SGID이다.
+
+2770
+2    = SGID
+7    = Owner rwx
+7    = Group rwx
+0    = Other ---
+
+SGID가 설정된 디렉터리 안에서 파일을 만들면
+새 파일이 부모 디렉터리의 그룹인 developers를 상속받는다.
+
+ls -ld에서 예:
+
+drwxrws--- ...
+
+처럼 Group 실행 위치에 s가 표시될 수 있다.
+
+
+5. /tmp/test-share에서 모든 사용자가 파일을 만들 수 있지만
+다른 사용자가 만든 파일을 함부로 삭제하지 못하도록 설정하시오.
+
+정답:
+
+sudo mkdir -p /tmp/test-share
+sudo chmod 1777 /tmp/test-share
+
+확인:
+ls -ld /tmp/test-share
+
+설명:
+앞의 1이 Sticky Bit이다.
+
+1777
+1    = Sticky Bit
+7    = Owner rwx
+7    = Group rwx
+7    = Other rwx
+
+모든 사용자가 디렉터리를 사용할 수 있지만
+일반적으로 자신이 소유하지 않은 파일을 함부로 삭제할 수 없다.
+
+ls -ld에서 예:
+
+drwxrwxrwt ...
+
+처럼 마지막에 t가 표시된다.
+
+/tmp 디렉터리가 대표적인 예이다.
+
+## 권한 관련 장애 대응 문제
+[리눅스 2장 장애 대응 4문제]
+
+1. user2 사용자가 /data/project 디렉터리에 들어가려고 했는데
+"Permission denied"가 발생했다.
+
+확인해보니:
+
+drwxr----- 2 user1 developers /data/project
+
+user2는 developers 그룹에 속해 있다.
+
+문제 원인은 무엇이며 어떻게 해결할 수 있는가?
+
+정답:
+디렉터리에 Group의 x 권한이 없기 때문이다.
+
+현재 Group 권한은 r-- 이므로
+디렉터리 목록 관련 권한은 있어도 내부 접근이 불가능하다.
+
+해결 예:
+sudo chmod 750 /data/project
+
+또는 그룹에 쓰기까지 필요하면:
+sudo chmod 770 /data/project
+
+
+2. Tomcat 서비스가 시작되지 않는다.
+
+로그를 확인해보니:
+/data/tomcat 디렉터리에 접근할 수 없다는 메시지가 나온다.
+
+확인 결과:
+
+drwx------ root root /data/tomcat
+
+Tomcat은 tomcat 계정으로 실행된다.
+
+원인과 해결 방법은?
+
+정답:
+tomcat 계정이 /data/tomcat 디렉터리에 접근할 권한이 없기 때문이다.
+
+소유자를 tomcat으로 변경할 수 있다.
+
+sudo chown -R tomcat:tomcat /data/tomcat
+
+필요한 권한도 확인한다.
+
+예:
+sudo chmod 750 /data/tomcat
+
+핵심:
+서비스가 어떤 사용자로 실행되는지와
+파일/디렉터리 소유권 및 권한을 함께 확인해야 한다.
+
+
+3. user1을 developers 그룹에 추가했다.
+
+sudo usermod -aG developers user1
+
+그런데 현재 로그인된 user1 세션에서
+developers 그룹 권한이 바로 적용되지 않는다.
+
+왜 그런가?
+
+정답:
+현재 로그인 세션은 그룹 정보 변경 전에 만들어진 세션이기 때문이다.
+
+로그아웃 후 다시 로그인하면 새 그룹 정보가 적용된다.
+
+확인:
+id user1
+
+또는 새 세션에서:
+groups
+
+
+4. 일반 사용자가 다음 명령을 실행했다.
+
+sudo systemctl restart nginx
+
+하지만
+"user is not in the sudoers file"
+또는 sudo 권한이 없다는 오류가 발생했다.
+
+원인과 해결 방법은?
+
+정답:
+해당 사용자에게 sudo 권한이 없기 때문이다.
+
+Ubuntu에서는 sudo 그룹에 추가할 수 있다.
+
+sudo usermod -aG sudo user1
+
+이후 로그아웃/로그인 후 확인한다.
+
+또는 필요한 경우:
+/etc/sudoers
+
+설정을 visudo로 수정한다.
+
+sudo visudo
+
+실무에서는 모든 sudo 권한을 주기보다
+필요한 명령만 허용하는 방식도 사용할 수 있다.
+
+## 면접문제
+[리눅스 2장 면접 질문 3문제]
+
+1. chmod와 chown의 차이를 설명해주세요.
+
+정답:
+chmod는 파일이나 디렉터리의 권한을 변경하는 명령이고,
+chown은 파일이나 디렉터리의 소유자 또는 소유 그룹을 변경하는 명령입니다.
+
+
+2. Linux에서 파일의 755 권한은 무엇을 의미합니까?
+
+정답:
+Owner는 rwx 권한을 가지며,
+Group과 Other는 r-x 권한을 가집니다.
+
+즉:
+Owner = 읽기/쓰기/실행
+Group = 읽기/실행
+Other = 읽기/실행
+
+
+3. Tomcat이나 Nginx 같은 서비스를 root가 아니라
+전용 서비스 계정으로 실행하는 이유는 무엇입니까?
+
+정답:
+서비스가 취약점 등으로 침해되었을 때
+공격자가 root 권한까지 얻는 위험을 줄이기 위해서입니다.
+
+서비스에 필요한 최소 권한만 가진 전용 계정을 사용하면
+문제가 발생했을 때 피해 범위를 제한할 수 있습니다.
+
+또 사람이 직접 로그인할 필요가 없다면
+nologin을 설정해 로그인 경로도 차단할 수 있습니다.
 </details>
 
 
