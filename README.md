@@ -1097,6 +1097,625 @@ systemd의 journal 로그를 확인하는 명령어이다.
 을 한 뒤 필요한 경우 서비스를 재시작한다.
 
 
+# Linux 3장 - 프로세스·서비스·systemd·로그 관리
+
+## 1. 기본 실습
+
+### 문제 1
+현재 실행 중인 프로세스를 전체적으로 확인하시오.
+
+정답:
+```bash
+ps aux
+```
+
+또는
+
+```bash
+ps -ef
+```
+
+---
+
+### 문제 2
+현재 실행 중인 SSH 관련 프로세스를 확인하시오.
+
+정답:
+```bash
+ps aux | grep ssh
+```
+
+또는
+
+```bash
+pgrep -a sshd
+```
+
+---
+
+### 문제 3
+sshd 프로세스의 PID를 확인하시오.
+
+정답:
+```bash
+pgrep sshd
+```
+
+프로세스 이름까지 같이 확인하려면:
+
+```bash
+pgrep -a sshd
+```
+
+---
+
+### 문제 4
+Ubuntu에서 SSH 서비스의 현재 상태를 확인하시오.
+
+정답:
+```bash
+systemctl status ssh
+```
+
+주요 상태:
+- active (running): 정상 실행 중
+- inactive: 중지 상태
+- failed: 실행 실패
+
+---
+
+### 문제 5
+SSH 서비스가 부팅 시 자동으로 시작되도록 설정되어 있는지 확인하시오.
+
+정답:
+```bash
+systemctl is-enabled ssh
+```
+
+결과 예:
+```text
+enabled
+```
+
+또는
+
+```text
+disabled
+```
+
+---
+
+### 문제 6
+SSH 서비스의 최근 로그 30줄을 확인하시오.
+
+정답:
+```bash
+journalctl -u ssh -n 30
+```
+
+---
+
+### 문제 7
+SSH 서비스의 로그를 실시간으로 확인하시오.
+
+정답:
+```bash
+journalctl -u ssh -f
+```
+
+종료:
+```text
+Ctrl + C
+```
+
+---
+
+### 문제 8
+`sleep 300` 명령을 Background로 실행하고 PID를 확인한 뒤 정상 종료하시오.
+
+정답:
+
+Background 실행:
+```bash
+sleep 300 &
+```
+
+PID 확인:
+```bash
+echo $!
+```
+
+또는
+
+```bash
+pgrep -a sleep
+```
+
+정상 종료:
+```bash
+kill PID
+```
+
+예:
+```bash
+kill 1234
+```
+
+---
+
+# 2. 실무형 실습
+
+### 문제 1
+SSH 서비스의 현재 상태와 부팅 시 자동 시작 여부를 각각 확인하시오.
+
+정답:
+
+현재 상태:
+```bash
+systemctl status ssh
+```
+
+또는
+```bash
+systemctl is-active ssh
+```
+
+자동 시작 여부:
+```bash
+systemctl is-enabled ssh
+```
+
+핵심:
+```text
+active
+= 현재 실행 상태
+
+enabled
+= 부팅 시 자동 시작 설정
+```
+
+---
+
+### 문제 2
+테스트용 서비스가 현재 실행 중이지만 부팅 시 자동 실행되지 않는 상황이다.
+
+현재 실행 여부와 자동 시작 여부를 각각 확인하고 자동 시작을 설정하시오.
+
+정답:
+
+현재 실행 여부:
+```bash
+systemctl status 서비스명
+```
+
+자동 시작 여부:
+```bash
+systemctl is-enabled 서비스명
+```
+
+자동 시작 설정:
+```bash
+sudo systemctl enable 서비스명
+```
+
+필요하면 현재 서비스도 시작:
+```bash
+sudo systemctl start 서비스명
+```
+
+한 번에 현재 시작 + 자동 시작:
+```bash
+sudo systemctl enable --now 서비스명
+```
+
+---
+
+### 문제 3
+서비스 설정을 변경한 뒤 서비스를 다시 적용하려고 한다.
+
+서비스가 reload를 지원하는 경우 프로세스를 완전히 중지하지 않고 설정을 다시 읽도록 하시오.
+
+정답:
+```bash
+sudo systemctl reload 서비스명
+```
+
+예:
+```bash
+sudo systemctl reload nginx
+```
+
+서비스가 reload를 지원하지 않거나 완전 재시작이 필요한 경우:
+```bash
+sudo systemctl restart 서비스명
+```
+
+차이:
+```text
+reload
+= 프로세스를 유지하면서 설정 다시 읽기
+
+restart
+= 프로세스를 종료하고 다시 시작
+```
+
+---
+
+### 문제 4
+특정 서비스의 최근 100줄 로그에서 ERROR라는 문자열만 확인하시오.
+
+정답:
+```bash
+journalctl -u 서비스명 -n 100 | grep -i "error"
+```
+
+예:
+```bash
+journalctl -u nginx -n 100 | grep -i "error"
+```
+
+---
+
+### 문제 5
+서버가 재부팅된 이후 발생한 systemd 로그만 확인하시오.
+
+정답:
+```bash
+journalctl -b
+```
+
+특정 서비스의 현재 부팅 이후 로그:
+```bash
+journalctl -b -u 서비스명
+```
+
+예:
+```bash
+journalctl -b -u ssh
+```
+
+---
+
+# 3. 장애 대응 문제
+
+### 문제 1
+웹 서비스에 접속되지 않는다.
+
+`systemctl status nginx` 결과가 다음과 같다.
+
+```text
+Active: failed
+```
+
+어떤 순서로 확인하겠는가?
+
+정답:
+
+서비스 상태 확인:
+```bash
+systemctl status nginx
+```
+
+로그 확인:
+```bash
+journalctl -u nginx -n 50
+```
+
+애플리케이션 자체 로그 확인:
+```bash
+tail -n 50 /var/log/nginx/error.log
+```
+
+필요하면 설정 파일 문법, 권한, 포트 충돌 등을 확인한다.
+
+기본 흐름:
+```text
+상태 확인
+→ 로그 확인
+→ 원인 분석
+→ 수정
+→ 서비스 시작
+→ 정상 여부 재확인
+```
+
+---
+
+### 문제 2
+서비스 상태는 `active (running)`인데 사용자가 웹페이지에 접속하지 못한다고 한다.
+
+서비스가 실행 중이라는 이유만으로 정상이라고 판단해도 되는가?
+
+정답:
+
+안 된다.
+
+실제 포트가 LISTEN 상태인지 확인해야 한다.
+
+```bash
+ss -lntp
+```
+
+필요하면:
+```bash
+curl localhost
+```
+
+점검 흐름:
+```text
+서비스 상태
+→ 프로세스
+→ 포트
+→ 애플리케이션 응답
+→ 네트워크/방화벽
+```
+
+---
+
+### 문제 3
+프로세스가 비정상적으로 멈춰서 종료하려고 한다.
+
+처음부터 `kill -9`를 사용해도 되는가?
+
+정답:
+
+가능하면 처음부터 사용하지 않는다.
+
+먼저:
+```bash
+kill PID
+```
+
+로 SIGTERM을 보내 정상 종료를 요청한다.
+
+종료되지 않을 경우:
+```bash
+kill -9 PID
+```
+
+를 사용한다.
+
+이유:
+SIGKILL은 프로세스가 정상 종료 작업을 수행할 기회를 주지 않고 즉시 종료하기 때문이다.
+
+---
+
+### 문제 4
+Nginx 서비스를 `start`하여 정상적으로 사용하고 있었다.
+
+서버 재부팅 후 Nginx가 실행되지 않았다.
+
+가장 먼저 의심할 부분은?
+
+정답:
+
+부팅 자동 시작 설정 여부를 확인한다.
+
+```bash
+systemctl is-enabled nginx
+```
+
+disabled라면:
+```bash
+sudo systemctl enable nginx
+```
+
+현재 실행도 필요하다면:
+```bash
+sudo systemctl start nginx
+```
+
+또는:
+```bash
+sudo systemctl enable --now nginx
+```
+
+핵심:
+```text
+start ≠ enable
+
+start
+= 현재 실행
+
+enable
+= 부팅 시 자동 시작
+```
+
+---
+
+### 문제 5
+서비스 장애가 발생하자 담당자가 바로 다음 명령을 실행했다.
+
+```bash
+sudo systemctl restart app
+```
+
+왜 이 방식이 항상 좋은 대응은 아닌가?
+
+정답:
+
+서비스를 바로 재시작하면 장애 당시 상태나 원인 분석에 필요한 정보가 사라질 수 있기 때문이다.
+
+먼저:
+```bash
+systemctl status app
+```
+
+로그 확인:
+```bash
+journalctl -u app -n 100
+```
+
+프로세스/포트 확인:
+```bash
+ps aux | grep app
+ss -lntp
+```
+
+권장 흐름:
+```text
+현상 확인
+→ 상태 확인
+→ 로그 확인
+→ 증거 확보
+→ 원인 분석
+→ 조치
+→ 재확인
+```
+
+---
+
+# 4. 면접 질문
+
+### 문제 1
+프로그램과 프로세스의 차이를 설명해주세요.
+
+정답:
+
+프로그램은 디스크에 저장된 실행 가능한 파일이고,
+프로세스는 그 프로그램이 실행되어 메모리에서 동작하고 있는 상태입니다.
+
+---
+
+### 문제 2
+systemd, systemctl, service의 관계를 설명해주세요.
+
+정답:
+
+systemd는 Linux의 시스템과 서비스를 관리하는 관리자입니다.
+
+`.service` 파일은 systemd에게 해당 프로그램을 어떻게 실행하고 관리할지 알려주는 설정입니다.
+
+systemctl은 사용자가 systemd에게 서비스 시작, 중지, 상태 확인 등의 명령을 전달하는 도구입니다.
+
+흐름:
+```text
+사용자
+→ systemctl
+→ systemd
+→ xxx.service
+→ 프로그램 실행
+→ 프로세스
+```
+
+---
+
+### 문제 3
+`systemctl start`와 `systemctl enable`의 차이는 무엇입니까?
+
+정답:
+
+`start`
+= 서비스를 현재 즉시 실행
+
+`enable`
+= 서버가 부팅될 때 해당 서비스가 자동으로 시작되도록 설정
+
+---
+
+### 문제 4
+SIGTERM과 SIGKILL의 차이를 설명해주세요.
+
+정답:
+
+SIGTERM은 프로세스에게 정상적으로 종료할 것을 요청하는 Signal입니다.
+
+SIGKILL은 프로세스를 즉시 강제로 종료하는 Signal입니다.
+
+일반적으로 먼저 SIGTERM으로 종료를 시도하고,
+종료되지 않을 경우 SIGKILL을 마지막 수단으로 사용합니다.
+
+---
+
+### 문제 5
+Linux 서버에서 서비스 장애가 발생했을 때 어떤 순서로 확인하시겠습니까?
+
+정답:
+
+먼저 서비스 상태를 확인합니다.
+
+```bash
+systemctl status 서비스명
+```
+
+그다음 프로세스와 포트를 확인합니다.
+
+```bash
+ps
+pgrep
+ss
+```
+
+그리고 systemd 로그와 애플리케이션 로그를 확인합니다.
+
+```bash
+journalctl -u 서비스명
+```
+
+```text
+/var/log
+```
+
+기본 흐름:
+```text
+상태 확인
+→ 프로세스 확인
+→ 포트 확인
+→ 로그 확인
+→ 원인 분석
+→ 조치
+→ 재확인
+```
+
+---
+
+# 5. 3장 핵심 명령어
+
+```bash
+# 프로세스 확인
+ps aux
+ps -ef
+pgrep -a 프로세스명
+
+# 프로세스 종료
+kill PID
+kill -9 PID
+
+# 서비스 상태
+systemctl status 서비스명
+systemctl is-active 서비스명
+
+# 서비스 제어
+sudo systemctl start 서비스명
+sudo systemctl stop 서비스명
+sudo systemctl restart 서비스명
+sudo systemctl reload 서비스명
+
+# 부팅 자동 시작
+sudo systemctl enable 서비스명
+sudo systemctl disable 서비스명
+systemctl is-enabled 서비스명
+
+# 현재 시작 + 자동 시작
+sudo systemctl enable --now 서비스명
+
+# systemd 로그
+journalctl -u 서비스명
+journalctl -u 서비스명 -n 50
+journalctl -u 서비스명 -f
+journalctl -b
+```
+
+# 6. 3장 완료 기준
+
+- 프로그램과 프로세스 차이를 설명할 수 있다.
+- PID / PPID를 이해한다.
+- 프로세스를 확인하고 종료할 수 있다.
+- systemd / systemctl / service의 관계를 설명할 수 있다.
+- start와 enable의 차이를 설명할 수 있다.
+- systemctl로 서비스를 관리할 수 있다.
+- journalctl로 서비스 로그를 확인할 수 있다.
+- 서비스 장애 시 상태 → 프로세스 → 포트 → 로그 순서로 접근할 수 있다.
+
 </details>
 
 
