@@ -704,7 +704,400 @@ Other = 읽기/실행
 nologin을 설정해 로그인 경로도 차단할 수 있습니다.
 </details>
 
+<details>
+<summary><h2>3장 프로세스 서비스 systemd  로그관리</h2></summary>
 
+## 프로그램과 프로세스
+1. 프로그램은 디스크에 저장되어 있는 실행 파일이다.
+2. 프로그램 = 실행되기 전 파일
+3. 프로세스 = 현재 실행 중인 프로그램
+
+## PID와 PPID
+1. 실행 중인 프로세스를 구분하기 위해 숫자를 붙인게 PID
+2. ps
+3. ps aux
+4. PPID : 부모 프로세스의 PID
+
+## PID 1과 systemd
+1. systemd는 Linux의 서비스와 부팅 과정을 관리하는 핵심 관리자
+2. PID = 1
+
+## Foreground와 Background
+1. 명령을 실행했을 때 터미널을 계속 잡고 있는 것을 Foreground라고 합니다.
+2. Background는 프로세스가 뒤에서 실행된다.
+3. 명령 뒤에 &를 붙인다 : sleep 1000 &
+4. Background 작업 확인 : jobs
+5. Foreground로 가져오기 : fg
+6. Background로 계속 실행 :bg
+
+## ps로 프로세스 확인
+1. ps
+2. ps aux
+3. ps -ef
+4. pgrep nginx : PID 찾기
+5. pgrep -a nginx : 프로세스 정보까지
+
+## 프로세스 종료와 Signal
+1. 실행 중인 프로세스를 종료할 때 : kill PID
+2. kill -9 PID
+
+## 서비스와 데몬
+1. 데몬은 보통 백그라운드에서 계속 실행되면서 요청을 기다리는 프로그램이다.
+2. 데몬을 운영체제 차원에서 관리하는 단위를 일반적으로 서비스라고 생각하면 된다.
+
+## systemd와 systemctl
+1. systemd가 서비스를 관리하고, systemd에게 명령할 때 사용하는 명령어가 systemctl이다.
+
+## start와 enable 차이
+1. start : 시작
+2. enable : 다음 부팅 때 자동으로 시작되도록 설정
+
+## 현재 실행과 자동 시작은 별개
+1. systemctl status : 현재 상태
+2. systemctl is-enabled : 부팅 자동 시작 여부
+
+## Unit이란?
+1. systemd는 여러 종류의 대상을 Unit이라는 단위로 관리한다.
+2. .service : 서비스
+3. .socket : 소켓
+4. .mount : 마운트
+5. .timer : 예약 작업
+6. 지금 중요한건 service Unit이다.
+
+## systemd 서비스 설정 파일
+1. /etc/systemd/system
+2. /usr/lib/systemd/system
+3. /lib/systemd/system
+4. systemd는 .service 파일을 보고 프로그램을 어떻게 시작할지 판단한다
+
+## journalctl
+1. systemd 서비스의 로그를 확인할 때 매우 중요한 명령이 journalctl이다.
+2. 특정 서비스 로그 : journalctl -u nginx : journalctl -u nginx -n 50
+3. 실시간 로그 : journalctl -f nginx
+4. 최근 부팅 이후 로그만 : journalctl -b
+
+## /var/log
+1. 모든 로그가 journal에만 있는 것은 아니다.
+2. 대표적인 위치
+
+## 로그에서 자주 같이 사용하는 명령
+1. tail -f 로그
+2. grep -i "error" app.log
+3. grep -E "ERROR|WARN|CRITICAL" app.log
+4. tail -n 100 app.log
+
+## 서비스 장애 확인 기본 순서
+1. 서비스 상태 확인 : systemctl status
+2. 프로세스 확인 : ps / pgrep
+3. 포트 확인 : ss
+4. 로그 확인 : journalctl /var/log
+5. 설정/권한/자원 등 원인 확인
+6. 조치
+7. 서비스 정상 여부 재확인
+
+## 확인문제
+# Linux 3장 - 프로세스·서비스·systemd·로그 관리
+
+## 확인문제 및 정답
+
+### 1. 프로그램과 프로세스의 차이는 무엇인가?
+
+**정답**
+
+- 프로그램: 디스크에 저장되어 있는 실행 파일
+- 프로세스: 프로그램이 실행되어 메모리에서 동작 중인 상태
+
+---
+
+### 2. PID란 무엇인가?
+
+**정답**
+
+PID는 Process ID의 약자로, 실행 중인 프로세스를 구분하기 위한 고유 번호이다.
+
+예:
+
+`PID 1500 → nginx`
+
+---
+
+### 3. PPID란 무엇인가?
+
+**정답**
+
+PPID는 Parent Process ID의 약자로, 현재 프로세스를 생성한 부모 프로세스의 PID이다.
+
+---
+
+### 4. Ubuntu에서 일반적으로 PID 1을 가지는 프로세스는 무엇인가?
+
+**정답**
+
+`systemd`
+
+systemd는 시스템 부팅 및 서비스들을 관리한다.
+
+---
+
+### 5. Foreground와 Background 프로세스의 차이는 무엇인가?
+
+**정답**
+
+- Foreground: 현재 터미널을 점유하면서 실행되는 프로세스
+- Background: 터미널 뒤에서 실행되는 프로세스
+
+명령 뒤에 `&`를 붙이면 Background로 실행할 수 있다.
+
+예:
+
+`sleep 1000 &`
+
+---
+
+### 6. 실행 중인 프로세스를 확인하는 대표적인 명령어는 무엇인가?
+
+**정답**
+
+`ps aux`
+
+또는
+
+`ps -ef`
+
+특정 프로세스를 검색할 때:
+
+`ps aux | grep nginx`
+
+또는
+
+`pgrep -a nginx`
+
+---
+
+### 7. kill 명령어는 어떤 역할을 하는가?
+
+**정답**
+
+프로세스에게 Signal을 전달하는 명령어이다.
+
+일반적으로:
+
+`kill PID`
+
+를 실행하면 SIGTERM을 전달하여 정상 종료를 요청한다.
+
+---
+
+### 8. SIGTERM과 SIGKILL의 차이는 무엇인가?
+
+**정답**
+
+- SIGTERM(15): 프로세스에게 정상적으로 종료할 것을 요청
+- SIGKILL(9): 프로세스를 즉시 강제 종료
+
+예:
+
+`kill PID`
+
+`kill -9 PID`
+
+가능하면 SIGTERM으로 먼저 종료를 시도하고, 종료되지 않을 경우 SIGKILL을 사용한다.
+
+---
+
+### 9. 데몬(Daemon)이란 무엇인가?
+
+**정답**
+
+백그라운드에서 계속 실행되면서 요청을 기다리는 프로그램이다.
+
+예:
+
+- sshd
+- nginx
+- mysqld
+
+---
+
+### 10. systemd란 무엇인가?
+
+**정답**
+
+Linux 시스템의 부팅과 서비스 등을 관리하는 시스템 및 서비스 관리자이다.
+
+Ubuntu에서 일반적으로 PID 1로 실행된다.
+
+---
+
+### 11. systemctl은 어떤 명령어인가?
+
+**정답**
+
+systemd가 관리하는 서비스를 제어하고 상태를 확인하는 명령어이다.
+
+대표 명령:
+
+- `systemctl start nginx`
+- `systemctl stop nginx`
+- `systemctl restart nginx`
+- `systemctl status nginx`
+
+---
+
+### 12. systemctl start와 enable의 차이는 무엇인가?
+
+**정답**
+
+`start`
+
+현재 서비스를 즉시 실행한다.
+
+`enable`
+
+서버가 부팅될 때 서비스를 자동으로 시작하도록 설정한다.
+
+즉:
+
+- start = 지금 실행
+- enable = 부팅 시 자동 실행
+
+---
+
+### 13. stop과 disable의 차이는 무엇인가?
+
+**정답**
+
+`stop`
+
+현재 실행 중인 서비스를 중지한다.
+
+`disable`
+
+다음 부팅부터 자동으로 실행되지 않도록 설정한다.
+
+---
+
+### 14. 서비스가 부팅 시 자동 시작하도록 설정되어 있는지 확인하는 명령어는?
+
+**정답**
+
+`systemctl is-enabled 서비스명`
+
+예:
+
+`systemctl is-enabled nginx`
+
+---
+
+### 15. systemd의 Unit이란 무엇인가?
+
+**정답**
+
+systemd가 관리하는 대상을 의미한다.
+
+대표적인 Unit:
+
+- `.service` → 서비스
+- `.socket` → 소켓
+- `.mount` → 마운트
+- `.timer` → 예약 작업
+- `.target` → 여러 Unit을 묶은 시스템 상태
+
+---
+
+### 16. 서비스 상태를 확인하는 명령어는?
+
+**정답**
+
+`systemctl status 서비스명`
+
+예:
+
+`systemctl status nginx`
+
+주요 상태:
+
+- active (running)
+- inactive
+- failed
+
+---
+
+### 17. journalctl은 어떤 명령어인가?
+
+**정답**
+
+systemd의 journal 로그를 확인하는 명령어이다.
+
+특정 서비스 로그 확인:
+
+`journalctl -u nginx`
+
+최근 50줄:
+
+`journalctl -u nginx -n 50`
+
+실시간 확인:
+
+`journalctl -u nginx -f`
+
+---
+
+### 18. Linux에서 일반적으로 로그 파일이 저장되는 디렉터리는 어디인가?
+
+**정답**
+
+`/var/log`
+
+예:
+
+- `/var/log/nginx/`
+- `/var/log/apache2/`
+- `/var/log/syslog`
+
+---
+
+### 19. 서비스 장애가 발생했을 때 기본적인 확인 순서는?
+
+**정답**
+
+1. 서비스 상태 확인
+2. 프로세스 확인
+3. 포트 확인
+4. 로그 확인
+5. 설정/권한/자원 등의 원인 확인
+6. 조치
+7. 정상 여부 재확인
+
+대표 명령:
+
+`systemctl status`
+
+`ps` / `pgrep`
+
+`ss`
+
+`journalctl`
+
+---
+
+### 20. 서비스 장애가 발생했을 때 무조건 restart부터 하는 것이 좋지 않은 이유는?
+
+**정답**
+
+서비스를 바로 재시작하면 장애 당시의 상태나 로그 등 원인 분석에 필요한 정보가 사라질 수 있기 때문이다.
+
+따라서 가능하면 먼저:
+
+1. 상태 확인
+2. 로그 확인
+3. 오류 내용 확인
+4. 원인 분석
+
+을 한 뒤 필요한 경우 서비스를 재시작한다.
+
+
+</details>
 
 
 
