@@ -1718,7 +1718,1263 @@ journalctl -b
 
 </details>
 
+<details>
+<summary><h2>4장 가상화와 가상머신</h2></summary>
+   # Linux 4장 - 가상화와 가상머신
 
+---
+
+# 1. 개념 요약
+
+## 1.1 가상화란?
+
+가상화는 하나의 물리 서버 자원을 여러 개의 논리적인 서버처럼 나누어 사용하는 기술이다.
+
+예:
+
+```text
+Physical Server
+
+CPU 16 Core
+RAM 64GB
+Disk 2TB
+
+      ↓ 가상화
+
+VM1 - Ubuntu
+VM2 - Windows
+VM3 - Ubuntu
+```
+
+물리 자원을 효율적으로 사용할 수 있고,
+여러 서버 환경을 하나의 물리 장비에서 운영할 수 있다.
+
+---
+
+## 1.2 Host와 Guest
+
+```text
+Host
+= VM을 실행시키는 쪽
+
+Guest
+= VM 안에서 실행되는 운영체제
+```
+
+예:
+
+```text
+Windows PC
+↓
+VMware Workstation
+↓
+Ubuntu VM
+```
+
+- Windows = Host OS
+- Ubuntu = Guest OS
+
+---
+
+## 1.3 Hypervisor
+
+Hypervisor는 물리 자원을 VM에 나누어 제공하고
+VM을 생성·실행·관리하는 계층이다.
+
+```text
+VM1        VM2        VM3
+ |          |          |
+ +----------+----------+
+            |
+       Hypervisor
+            |
+     Physical Hardware
+```
+
+주요 역할:
+
+- CPU 할당
+- Memory 할당
+- Disk 제공
+- Virtual NIC 제공
+- VM 격리
+- VM 실행/중지
+
+---
+
+## 1.4 Type 1 / Type 2 Hypervisor
+
+### Type 1
+
+물리 하드웨어 위에서 직접 동작하는 서버 가상화 방식이다.
+
+대표적인 예:
+
+- VMware ESXi
+- Hyper-V Server 계열
+- KVM 기반 서버 가상화 환경
+
+주로 데이터센터나 서버 가상화 환경에서 사용한다.
+
+### Type 2
+
+기존 운영체제 위에 가상화 프로그램을 설치하는 방식이다.
+
+예:
+
+```text
+VM
+↓
+VMware Workstation
+↓
+Windows
+↓
+Hardware
+```
+
+대표적인 예:
+
+- VMware Workstation
+- VirtualBox
+
+개발, 테스트, 개인 실습 환경에서 많이 사용한다.
+
+---
+
+## 1.5 VM의 가상 하드웨어
+
+VM 안에서는 실제 서버처럼 다음 자원을 볼 수 있다.
+
+```text
+vCPU
+Virtual Memory
+Virtual Disk
+Virtual NIC
+```
+
+Guest OS에서는 실제 하드웨어처럼 사용할 수 있다.
+
+확인 예:
+
+```bash
+lscpu
+free -h
+lsblk
+ip addr
+```
+
+---
+
+## 1.6 vCPU와 Overcommit
+
+vCPU는 VM에 할당된 논리적인 CPU 자원이다.
+
+예:
+
+```text
+Physical CPU = 8 Core
+
+VM1 = 4 vCPU
+VM2 = 4 vCPU
+VM3 = 4 vCPU
+```
+
+총 12 vCPU를 할당할 수도 있다.
+
+이를 자원 Overcommit 관점에서 볼 수 있다.
+
+VM들이 동시에 CPU를 많이 사용하면
+물리 CPU를 서로 경쟁하기 때문에 성능 저하가 발생할 수 있다.
+
+---
+
+## 1.7 가상 메모리
+
+Host의 물리 RAM을 VM에 나누어 할당한다.
+
+예:
+
+```text
+Host RAM = 32GB
+
+VM1 = 8GB
+VM2 = 8GB
+VM3 = 8GB
+```
+
+Host OS도 메모리가 필요하므로
+VM에 모든 RAM을 할당하면 안 된다.
+
+---
+
+## 1.8 Virtual Disk
+
+VM에서 `/dev/sda`, `/dev/sdb`처럼 보이는 디스크는
+실제로는 Host의 저장공간 위에 생성된 가상 디스크일 수 있다.
+
+```text
+Host SSD
+↓
+Virtual Disk File
+↓
+VM
+↓
+/dev/sda
+```
+
+Guest OS에서는 일반 디스크처럼:
+
+- Partition
+- Filesystem
+- Mount
+- LVM
+
+등을 사용할 수 있다.
+
+---
+
+## 1.9 Thin / Thick Provisioning
+
+### Thick
+
+지정한 디스크 공간을 미리 확보하는 방식이다.
+
+예:
+
+```text
+VM Disk = 100GB
+실제 Host 공간도 100GB 확보
+```
+
+### Thin
+
+VM에서는 100GB로 보이더라도
+실제로 사용한 만큼 Host 저장공간을 소비한다.
+
+예:
+
+```text
+VM Disk = 100GB
+실제 사용 = 20GB
+Host 사용량 ≈ 실제 사용량 중심
+```
+
+장점:
+
+- 저장공간 효율
+
+주의:
+
+- 실제 Host Disk보다 VM에 너무 많은 논리 용량을 할당하면
+  나중에 Host 저장공간 부족 장애가 발생할 수 있다.
+
+---
+
+## 1.10 Virtual NIC / Virtual Switch
+
+VM도 네트워크 인터페이스를 가진다.
+
+예:
+
+```text
+ens32
+ens34
+ens35
+```
+
+실제 랜카드가 아니라 Virtual NIC이다.
+
+```text
+VM
+↓
+Virtual NIC
+↓
+Virtual Switch
+↓
+Host / Physical Network
+```
+
+Virtual Switch는 VM끼리 또는 VM과 외부 네트워크를 연결한다.
+
+---
+
+## 1.11 NAT / Bridged / Host-only
+
+### NAT
+
+VM이 Host를 통해 외부 네트워크로 통신한다.
+
+```text
+VM
+↓
+Host NAT
+↓
+Internet
+```
+
+### Bridged
+
+VM이 물리 네트워크에 직접 연결된 별도의 장비처럼 동작한다.
+
+```text
+VM
+↓
+Physical Network
+```
+
+### Host-only
+
+Host와 VM 또는 같은 가상 네트워크의 VM끼리 주로 통신한다.
+
+외부 네트워크와 분리된 실습 환경을 만들 때 유용하다.
+
+---
+
+## 1.12 Snapshot
+
+Snapshot은 VM의 특정 시점 상태를 저장해
+나중에 해당 상태로 되돌릴 수 있게 하는 기능이다.
+
+예:
+
+```text
+정상 상태
+↓
+Snapshot
+↓
+방화벽 실습
+↓
+네트워크 장애
+↓
+Snapshot 복원
+```
+
+중요:
+
+```text
+Snapshot ≠ Backup
+```
+
+Snapshot은 실습이나 변경 전 되돌리기 용도로 유용하지만
+독립적인 백업을 완전히 대체하지는 않는다.
+
+---
+
+## 1.13 Clone
+
+Clone은 기존 VM을 복제하여 새로운 VM을 만드는 기능이다.
+
+예:
+
+```text
+Base Ubuntu VM
+├── web01
+├── web02
+├── was01
+└── was02
+```
+
+복제 후 확인해야 할 것:
+
+- Hostname
+- IP
+- Machine ID
+- SSH Host Key
+- 서비스 설정
+
+---
+
+## 1.14 KVM
+
+KVM은 Kernel-based Virtual Machine의 약자이다.
+
+Linux Kernel에 가상화 기능을 제공하여
+Linux 서버에서 VM을 실행할 수 있게 한다.
+
+구조:
+
+```text
+VM
+↓
+QEMU / KVM
+↓
+Linux Kernel
+↓
+Hardware
+```
+
+KVM은 Linux의 하드웨어 가상화 기능을 담당하고
+QEMU와 함께 사용하는 경우가 많다.
+
+---
+
+## 1.15 virt-manager
+
+virt-manager는 KVM/QEMU 기반 VM을 GUI로 관리하는 도구이다.
+
+주요 기능:
+
+- VM 생성
+- CPU 설정
+- Memory 설정
+- Disk 설정
+- Network 설정
+- VM 시작/종료
+
+```text
+virt-manager
+= 관리 GUI
+
+KVM/QEMU
+= 실제 가상화 기능
+```
+
+---
+
+## 1.16 Hardware Virtualization
+
+CPU 자체에서도 가상화를 지원한다.
+
+대표적인 기능:
+
+```text
+Intel VT-x
+AMD-V
+```
+
+BIOS/UEFI에서 비활성화되어 있으면
+가상화 기능이 정상적으로 동작하지 않을 수 있다.
+
+확인 예:
+
+```bash
+lscpu
+```
+
+---
+
+## 1.17 VM과 Container 차이
+
+### VM
+
+```text
+Hardware
+↓
+Hypervisor
+↓
+Guest OS
+↓
+Application
+```
+
+VM마다 Guest OS가 존재한다.
+
+### Container
+
+```text
+Hardware
+↓
+Host OS Kernel
+↓
+Container Runtime
+↓
+Container
+```
+
+Container는 Host Kernel을 공유한다.
+
+일반적인 특징:
+
+```text
+VM
+- Guest OS 포함
+- 비교적 무거움
+- OS 단위 격리
+
+Container
+- Host Kernel 공유
+- 가벼움
+- 시작 속도가 빠름
+```
+
+---
+
+## 1.18 가상화 장점
+
+- 물리 서버 자원 활용률 향상
+- 서버 구축 속도 향상
+- 테스트 환경 생성 편리
+- Snapshot/Clone 활용 가능
+- 여러 OS 운영 가능
+- 서버 통합 가능
+
+---
+
+## 1.19 가상화의 장애 위험
+
+가상화 환경이라고 장애가 없어지는 것은 아니다.
+
+```text
+Physical Host 장애
+       ↓
+VM1    VM2    VM3
+ ↓      ↓      ↓
+장애    장애    장애
+```
+
+한 Hypervisor Host에 여러 VM이 있으면
+Host 장애가 여러 VM에 동시에 영향을 줄 수 있다.
+
+따라서 실제 환경에서는:
+
+- 여러 Hypervisor Host
+- HA
+- Live Migration
+- 이중화
+- Backup
+
+등을 고려한다.
+
+---
+
+# 2. 확인문제 + 정답
+
+## 문제 1
+
+가상화란 무엇인가?
+
+### 정답
+
+하나의 물리적인 컴퓨팅 자원을 여러 개의 논리적인 컴퓨팅 환경으로 나누어 사용하는 기술이다.
+
+---
+
+## 문제 2
+
+Host와 Guest의 차이는 무엇인가?
+
+### 정답
+
+- Host: VM을 실행하고 관리하는 쪽
+- Guest: VM 안에서 실행되는 운영체제
+
+---
+
+## 문제 3
+
+Hypervisor의 역할은 무엇인가?
+
+### 정답
+
+물리 CPU, Memory, Disk, Network 등의 자원을 VM에 할당하고
+VM을 생성·실행·관리하는 역할을 한다.
+
+---
+
+## 문제 4
+
+Type 1과 Type 2 Hypervisor의 차이는?
+
+### 정답
+
+Type 1은 물리 하드웨어 위에서 직접 서버 가상화를 제공하는 방식이고,
+Type 2는 기존 운영체제 위에 가상화 프로그램을 설치하는 방식이다.
+
+---
+
+## 문제 5
+
+vCPU란 무엇인가?
+
+### 정답
+
+VM에 할당된 논리적인 CPU 자원이다.
+
+---
+
+## 문제 6
+
+CPU Overcommit이란 무엇인가?
+
+### 정답
+
+물리 CPU 자원보다 많은 vCPU를 VM들에게 논리적으로 할당하는 것이다.
+
+모든 VM이 동시에 높은 CPU를 사용하면 성능 저하가 발생할 수 있다.
+
+---
+
+## 문제 7
+
+Thin Provisioning이란 무엇인가?
+
+### 정답
+
+VM에 큰 디스크 용량을 논리적으로 제공하되
+실제 Host 저장공간은 VM이 사용하는 만큼 중심으로 소비하는 방식이다.
+
+---
+
+## 문제 8
+
+NAT, Bridged, Host-only의 차이는 무엇인가?
+
+### 정답
+
+- NAT: Host를 통해 외부 네트워크로 통신
+- Bridged: VM이 물리 네트워크의 독립 장비처럼 동작
+- Host-only: Host와 VM 또는 가상 네트워크 내부 통신 중심
+
+---
+
+## 문제 9
+
+Snapshot과 Backup의 차이는?
+
+### 정답
+
+Snapshot은 특정 시점으로 빠르게 되돌리기 위한 기능이고,
+Backup은 원본 손실이나 장애에 대비하여 데이터를 별도로 보호하는 목적이다.
+
+Snapshot은 Backup을 완전히 대체하지 않는다.
+
+---
+
+## 문제 10
+
+Clone이란 무엇인가?
+
+### 정답
+
+기존 VM을 복제하여 새로운 VM을 만드는 기능이다.
+
+---
+
+## 문제 11
+
+VM을 Clone한 후 확인해야 할 항목은?
+
+### 정답
+
+예:
+
+- Hostname
+- IP
+- Machine ID
+- SSH Host Key
+- 서비스 설정
+
+---
+
+## 문제 12
+
+KVM이란 무엇인가?
+
+### 정답
+
+Linux Kernel에 가상화 기능을 제공하여
+Linux 환경에서 VM을 실행할 수 있게 하는 기술이다.
+
+---
+
+## 문제 13
+
+virt-manager는 어떤 역할을 하는가?
+
+### 정답
+
+KVM/QEMU 기반의 가상머신을 GUI로 생성하고 관리하는 도구이다.
+
+---
+
+## 문제 14
+
+Intel VT-x와 AMD-V는 무엇인가?
+
+### 정답
+
+CPU가 제공하는 하드웨어 가상화 지원 기능이다.
+
+---
+
+## 문제 15
+
+VM과 Container의 가장 큰 구조적 차이는 무엇인가?
+
+### 정답
+
+VM은 VM마다 Guest OS를 가지지만,
+Container는 기본적으로 Host OS의 Kernel을 공유한다.
+
+---
+
+# 3. 기본 실습문제 + 정답
+
+## 문제 1
+
+현재 VM의 CPU 정보를 확인하시오.
+
+### 정답
+
+```bash
+lscpu
+```
+
+---
+
+## 문제 2
+
+현재 VM에 할당된 Memory 정보를 확인하시오.
+
+### 정답
+
+```bash
+free -h
+```
+
+---
+
+## 문제 3
+
+VM의 가상 디스크 정보를 확인하시오.
+
+### 정답
+
+```bash
+lsblk
+```
+
+또는
+
+```bash
+sudo fdisk -l
+```
+
+---
+
+## 문제 4
+
+VM의 Network Interface와 IP 주소를 확인하시오.
+
+### 정답
+
+```bash
+ip addr
+```
+
+간단히 확인:
+
+```bash
+ip -br addr
+```
+
+---
+
+## 문제 5
+
+VM의 Hostname을 확인하시오.
+
+### 정답
+
+```bash
+hostname
+```
+
+또는:
+
+```bash
+hostnamectl
+```
+
+---
+
+## 문제 6
+
+현재 Linux에서 가상화 관련 CPU 정보를 확인하시오.
+
+### 정답
+
+```bash
+lscpu
+```
+
+출력에서 Virtualization 항목 등을 확인한다.
+
+---
+
+## 문제 7
+
+현재 VM이 어떤 환경에서 실행되고 있는지 확인하는 명령어 중 하나를 사용하시오.
+
+### 정답
+
+```bash
+systemd-detect-virt
+```
+
+환경에 따라 예:
+
+```text
+vmware
+kvm
+oracle
+none
+```
+
+등이 출력될 수 있다.
+
+---
+
+## 문제 8
+
+VM에 여러 NIC가 있다면 모든 Interface를 확인하시오.
+
+### 정답
+
+```bash
+ip link
+```
+
+또는:
+
+```bash
+ip -br addr
+```
+
+---
+
+# 4. 실무형 문제 + 정답
+
+## 문제 1
+
+VM이 느리다는 요청이 들어왔다.
+
+VM 자체에 CPU와 Memory가 얼마나 할당되어 있는지 확인하려면?
+
+### 정답
+
+CPU:
+
+```bash
+lscpu
+```
+
+Memory:
+
+```bash
+free -h
+```
+
+필요하면 실제 사용률은:
+
+```bash
+top
+```
+
+으로 확인한다.
+
+---
+
+## 문제 2
+
+VM에 100GB 디스크를 설정했는데
+Host에서 실제로 20GB 정도만 사용하고 있다.
+
+어떤 가상 디스크 방식일 가능성이 높은가?
+
+### 정답
+
+Thin Provisioning일 가능성이 높다.
+
+VM에서는 100GB로 보이지만
+Host에서는 실제 사용량을 중심으로 공간을 소비할 수 있다.
+
+---
+
+## 문제 3
+
+새 VM을 기존 VM에서 Clone했다.
+
+부팅 후 가장 먼저 확인할 시스템 정보는?
+
+### 정답
+
+대표적으로:
+
+```bash
+hostnamectl
+ip addr
+```
+
+확인해야 할 항목:
+
+- Hostname
+- IP 주소
+- Network 설정
+- Machine ID
+- SSH Host Key
+
+중복 여부를 점검한다.
+
+---
+
+## 문제 4
+
+테스트 전에 iptables 설정을 크게 변경하려고 한다.
+
+빠르게 이전 상태로 되돌릴 가능성이 필요하다.
+
+가상화 환경에서 어떤 기능을 사용할 수 있는가?
+
+### 정답
+
+Snapshot을 사용할 수 있다.
+
+변경 전 Snapshot을 생성하고
+실습 실패 시 이전 상태로 복원할 수 있다.
+
+단, Snapshot을 장기 백업으로 사용해서는 안 된다.
+
+---
+
+## 문제 5
+
+Host 물리 RAM이 16GB인데
+VM 3개에 각각 8GB씩 RAM을 할당하였다.
+
+어떤 문제가 발생할 수 있는가?
+
+### 정답
+
+VM RAM 총합이 24GB로
+Host 물리 RAM 16GB보다 크다.
+
+VM들이 동시에 메모리를 많이 사용하면
+Host의 Memory 부족, Swap 증가, 성능 저하 등이 발생할 수 있다.
+
+---
+
+## 문제 6
+
+외부 인터넷과 분리된 Linux 네트워크 실습 환경을 만들고 싶다.
+
+어떤 VMware 네트워크 방식이 적합한가?
+
+### 정답
+
+Host-only 방식이 적합할 수 있다.
+
+Host와 VM 또는 동일한 Host-only 네트워크의 VM끼리
+통신하도록 구성할 수 있다.
+
+---
+
+# 5. 장애 대응 문제 + 정답
+
+## 문제 1
+
+VM이 부팅되지 않는다.
+
+가장 먼저 어떤 부분들을 확인할 수 있는가?
+
+### 정답
+
+확인 순서 예:
+
+```text
+VM 전원 상태
+↓
+Hypervisor 오류 메시지
+↓
+Host CPU / Memory / Disk 여유 공간
+↓
+Virtual Disk 연결 여부
+↓
+VM 설정
+↓
+Guest OS 부팅 로그
+```
+
+Host의 자원 부족이나 Virtual Disk 문제도 함께 확인한다.
+
+---
+
+## 문제 2
+
+VM 여러 대가 동시에 매우 느려졌다.
+
+각 VM 내부에서는 특별한 문제가 보이지 않는다.
+
+어떤 부분을 의심할 수 있는가?
+
+### 정답
+
+Hypervisor Host의 자원 부족을 의심할 수 있다.
+
+예:
+
+- Physical CPU 부족
+- CPU Overcommit
+- Memory 부족
+- Host Swap 증가
+- Storage I/O 병목
+- Host Disk 용량 부족
+
+여러 VM이 동시에 느려졌다면
+각 Guest뿐 아니라 Host 계층도 확인해야 한다.
+
+---
+
+## 문제 3
+
+한 물리 Hypervisor Host 위에 VM 10대가 있다.
+
+Host가 갑자기 장애로 종료되었다.
+
+VM에는 어떤 영향이 발생하는가?
+
+### 정답
+
+해당 Host에서 실행 중이던 VM들이 모두 영향을 받을 수 있다.
+
+가상화는 VM을 논리적으로 분리하지만
+물리 Host 자체의 장애까지 제거하는 것은 아니다.
+
+따라서 운영 환경에서는 HA 및 Host 이중화를 고려한다.
+
+---
+
+## 문제 4
+
+VM을 Clone한 뒤 두 VM이 네트워크에서 충돌한다.
+
+가장 먼저 무엇을 확인해야 하는가?
+
+### 정답
+
+두 VM의 IP 설정을 확인한다.
+
+```bash
+ip addr
+ip route
+```
+
+또한:
+
+- Hostname
+- MAC 설정
+- Machine ID
+- Network 설정
+
+등의 중복 여부도 확인한다.
+
+---
+
+## 문제 5
+
+Thin Provisioning으로 여러 VM에 많은 디스크를 할당해 두었다.
+
+어느 날 여러 VM에서 동시에 디스크 관련 장애가 발생했다.
+
+Host에서 무엇을 확인해야 하는가?
+
+### 정답
+
+Host의 실제 물리 Disk 여유 공간을 확인해야 한다.
+
+Thin Provisioning은 논리적으로 실제 용량보다 많은 공간을 할당할 수 있기 때문에
+VM들이 동시에 디스크를 많이 사용하면 Host Storage가 고갈될 수 있다.
+
+---
+
+## 문제 6
+
+VM의 NIC는 정상적으로 보이지만 외부 통신이 되지 않는다.
+
+가상화 계층에서 확인할 항목은?
+
+### 정답
+
+예:
+
+- Virtual NIC가 연결되어 있는지
+- VMnet 설정
+- NAT / Bridged / Host-only 설정
+- Virtual Switch 연결
+- Host Network 상태
+
+Guest 내부에서는:
+
+```bash
+ip addr
+ip route
+ping
+```
+
+등도 확인한다.
+
+---
+
+# 6. 면접질문 + 정답
+
+## 질문 1
+
+가상화를 사용하는 이유를 설명해주세요.
+
+### 정답
+
+하나의 물리 서버 자원을 여러 VM으로 나누어 사용함으로써
+자원 활용률을 높이고 서버 구축 및 운영을 편리하게 할 수 있습니다.
+
+또한 Snapshot, Clone 등을 활용하여
+테스트 환경 구성과 서버 복제가 편리합니다.
+
+---
+
+## 질문 2
+
+Type 1과 Type 2 Hypervisor의 차이는 무엇입니까?
+
+### 정답
+
+Type 1은 서버 가상화를 위해 하드웨어에 가까운 계층에서 동작하며
+데이터센터와 서버 환경에 주로 사용됩니다.
+
+Type 2는 Windows 같은 기존 운영체제 위에 가상화 프로그램을 설치하여
+VM을 실행하는 방식이며 개발, 테스트, 개인 실습에 많이 사용됩니다.
+
+---
+
+## 질문 3
+
+VM과 Container의 차이는 무엇입니까?
+
+### 정답
+
+VM은 각 VM마다 Guest OS를 포함하지만,
+Container는 Host OS의 Kernel을 공유합니다.
+
+따라서 Container가 일반적으로 더 가볍고 빠르게 시작되지만,
+VM은 OS 단위의 격리와 서로 다른 운영체제 사용에 유리합니다.
+
+---
+
+## 질문 4
+
+Snapshot과 Backup의 차이는 무엇입니까?
+
+### 정답
+
+Snapshot은 VM의 특정 시점 상태로 빠르게 되돌리기 위한 기능입니다.
+
+Backup은 시스템이나 데이터가 손실되었을 때 복구하기 위해
+원본과 별도로 데이터를 보호하는 것이 목적입니다.
+
+Snapshot은 Backup을 완전히 대체할 수 없습니다.
+
+---
+
+## 질문 5
+
+Thin Provisioning의 장점과 위험은 무엇입니까?
+
+### 정답
+
+장점은 실제 사용하는 만큼 중심으로 저장공간을 소비하여
+스토리지를 효율적으로 사용할 수 있다는 것입니다.
+
+하지만 실제 물리 스토리지보다 많은 논리 용량을 할당할 수 있기 때문에
+VM들의 사용량이 증가하면 Host의 실제 저장공간이 부족해질 수 있습니다.
+
+---
+
+## 질문 6
+
+VM을 Clone한 후 어떤 점을 확인해야 합니까?
+
+### 정답
+
+Hostname, IP 주소, Machine ID, SSH Host Key 등
+시스템 식별 정보가 기존 VM과 중복되지 않는지 확인해야 합니다.
+
+특히 IP 중복은 네트워크 장애를 발생시킬 수 있습니다.
+
+---
+
+## 질문 7
+
+KVM과 virt-manager의 관계를 설명해주세요.
+
+### 정답
+
+KVM은 Linux Kernel에서 가상화 기능을 제공하는 기술이고,
+virt-manager는 KVM/QEMU 환경의 VM을 GUI로 생성하고 관리하기 위한 도구입니다.
+
+---
+
+## 질문 8
+
+가상화 환경에서 Host 장애가 중요한 이유는 무엇입니까?
+
+### 정답
+
+하나의 Host 위에 여러 VM이 실행될 수 있기 때문에
+Host 자체가 장애가 나면 해당 Host의 여러 VM이 동시에 영향을 받을 수 있습니다.
+
+그래서 실제 운영 환경에서는
+Host 이중화, HA, Migration, Backup 등을 고려합니다.
+
+---
+
+# 7. 핵심 명령어 정리
+
+```bash
+# CPU
+lscpu
+
+# Memory
+free -h
+
+# Disk
+lsblk
+sudo fdisk -l
+
+# Network
+ip addr
+ip -br addr
+ip link
+ip route
+
+# Hostname
+hostname
+hostnamectl
+
+# 가상화 환경 확인
+systemd-detect-virt
+```
+
+---
+
+# 8. 4장 완료 기준
+
+아래 내용을 설명할 수 있으면 4장 기본 개념은 완료한 것으로 본다.
+
+- 가상화가 무엇인지 설명할 수 있다.
+- Host와 Guest의 차이를 설명할 수 있다.
+- Hypervisor의 역할을 설명할 수 있다.
+- Type 1 / Type 2 차이를 설명할 수 있다.
+- vCPU / Virtual Memory / Virtual Disk / Virtual NIC를 이해한다.
+- CPU / Memory Overcommit의 위험을 이해한다.
+- Thin / Thick Provisioning 차이를 설명할 수 있다.
+- NAT / Bridged / Host-only 차이를 설명할 수 있다.
+- Snapshot과 Backup의 차이를 설명할 수 있다.
+- Clone 후 중복 설정을 확인해야 하는 이유를 안다.
+- KVM과 virt-manager의 관계를 설명할 수 있다.
+- VM과 Container의 차이를 설명할 수 있다.
+- VM 장애뿐 아니라 Hypervisor Host 장애도 생각할 수 있다.
+   
+
+</details>
 
 
 
