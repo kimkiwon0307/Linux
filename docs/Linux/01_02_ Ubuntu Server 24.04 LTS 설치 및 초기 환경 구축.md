@@ -1,3 +1,6 @@
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/891895ed-43d8-40a5-9f4e-605717ee9825" />
+
+
 
 # Linux 프로젝트 — 1장 2교시
 ## Ubuntu Server 24.04 LTS 설치 및 초기 환경 구축
