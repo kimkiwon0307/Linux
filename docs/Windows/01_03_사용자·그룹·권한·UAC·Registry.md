@@ -1,5 +1,6 @@
 
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/8e533242-05f7-4ed0-9ced-127ddd287e57" />
 
 
 # Windows OS 프로젝트식 학습
